@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/lckrugel/file-server/internal/auth"
 	"github.com/lckrugel/file-server/internal/files"
 	"github.com/lckrugel/file-server/internal/handlers"
+	"github.com/lckrugel/file-server/internal/users"
 )
 
 func main() {
@@ -16,6 +18,12 @@ func main() {
 	fileStorage := files.NewLocalStorage("./storage")
 	fileService := files.NewFileService(fileRepo, fileStorage)
 	fileHandler := handlers.NewFileHandler(fileService)
+
+	userRepo := users.NewMemoryRepository()
+	userService := users.NewUserService(userRepo)
+
+	credentialRepo := auth.NewMemoryRepository()
+	_ = auth.NewAuthService(credentialRepo, userService)
 
 	router.Post("/files", fileHandler.Upload)
 	router.Get("/files/{fileId}", fileHandler.Download)
