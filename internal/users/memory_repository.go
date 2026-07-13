@@ -42,7 +42,7 @@ func (memo *MemoryRepository) GetById(ctx context.Context, id uuid.UUID) (*User,
 			return user, nil
 		}
 	}
-	return nil, ErrUserNotFound
+	return nil, nil
 }
 
 func (memo *MemoryRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
@@ -56,7 +56,7 @@ func (memo *MemoryRepository) GetByEmail(ctx context.Context, email string) (*Us
 			return user, nil
 		}
 	}
-	return nil, ErrUserNotFound
+	return nil, nil
 }
 
 func (memo *MemoryRepository) List(ctx context.Context) ([]*User, error) {

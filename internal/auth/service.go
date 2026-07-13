@@ -68,15 +68,15 @@ func (s *AuthService) Login(
 		return nil, "", ErrInvalidCredentials
 	}
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to find user")
+		return nil, "", fmt.Errorf("failed to find user: %w", err)
 	}
 
 	cred, err := s.credRepo.GetByUserID(ctx, user.ID)
-	if errors.Is(err, ErrCredentialsNotFound) {
-		return nil, "", ErrInvalidCredentials
-	}
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to find credentials")
+		return nil, "", fmt.Errorf("failed to find credentials: %w", err)
+	}
+	if cred == nil {
+		return nil, "", ErrInvalidCredentials
 	}
 
 	match, err := s.hasher.verifyPassword(password, cred.PasswordHash)

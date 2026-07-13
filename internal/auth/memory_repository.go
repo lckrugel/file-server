@@ -52,5 +52,5 @@ func (memo *MemoryRepository) GetByUserID(ctx context.Context, id uuid.UUID) (*C
 			return cred, nil
 		}
 	}
-	return nil, ErrCredentialsNotFound
+	return nil, nil
 }
