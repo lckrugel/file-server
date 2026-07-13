@@ -29,7 +29,7 @@ func newHasher() *hasher {
 	}
 }
 
-func (h *hasher) HashPassword(plainPassword string) (string, error) {
+func (h *hasher) hashPassword(plainPassword string) (string, error) {
 	salt := make([]byte, h.saltLength)
 	if _, err := rand.Read(salt); err != nil {
 		return "", fmt.Errorf("failed to generate salt: %w", err)
@@ -52,7 +52,7 @@ func (h *hasher) HashPassword(plainPassword string) (string, error) {
 	return encoded, nil
 }
 
-func (h *hasher) VerifyPassword(givenPassword, encodedHash string) (bool, error) {
+func (h *hasher) verifyPassword(givenPassword, encodedHash string) (bool, error) {
 	salt, hash, err := h.decodeHash(encodedHash)
 	if err != nil {
 		return false, err

@@ -30,34 +30,34 @@ func NewAuthService(cRepo CredentialRepository, uProvider UserProvider) *AuthSer
 
 func (s *AuthService) Register(
 	ctx context.Context, email, name, password string,
-) (string, error) {
+) (*users.User, string, error) {
 	user, err := s.userProv.Create(ctx, &users.UserStore{
 		Email: email,
 		Name:  name,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to store user: %w", err)
+		return nil, "", fmt.Errorf("failed to store user: %w", err)
 	}
 
 	if err := validatePassword(password); err != nil {
-		return "", err
+		return nil, "", err
 	}
 
-	passwordHash, err := s.hasher.HashPassword(password)
+	passwordHash, err := s.hasher.hashPassword(password)
 	if err != nil {
-		return "", fmt.Errorf("failed to hash password: %w", err)
+		return nil, "", fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	cred := NewCredential(user.ID, passwordHash)
 	if err := s.credRepo.Insert(ctx, cred); err != nil {
-		return "", fmt.Errorf("failed to store user credentials: %w", err)
+		return nil, "", fmt.Errorf("failed to store user credentials: %w", err)
 	}
 
 	token, err := GenerateJWT(cred.UserID)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate JWT: %w", err)
+		return nil, "", fmt.Errorf("failed to generate JWT: %w", err)
 	}
-	return token, nil
+	return user, token, nil
 }
 
 func (s *AuthService) Login(
@@ -79,7 +79,7 @@ func (s *AuthService) Login(
 		return nil, "", fmt.Errorf("failed to find credentials")
 	}
 
-	match, err := s.hasher.VerifyPassword(password, cred.PasswordHash)
+	match, err := s.hasher.verifyPassword(password, cred.PasswordHash)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to verify password: %w", err)
 	}
