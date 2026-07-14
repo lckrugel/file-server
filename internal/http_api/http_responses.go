@@ -1,19 +1,19 @@
-package handlers
+package http_api
 
 import (
 	"encoding/json"
 	"net/http"
 )
 
-type apiJSONResponse struct {
+type APIResponse struct {
 	status  int
 	Message string    `json:"message,omitempty"`
-	Error   *apiError `json:"error,omitempty"`
+	Error   *APIError `json:"error,omitempty"`
 	Data    any       `json:"data,omitempty"`
 }
 
-func newAPIResponse(msg string, status int, err *apiError, data any) *apiJSONResponse {
-	return &apiJSONResponse{
+func newAPIResponse(msg string, status int, err *APIError, data any) *APIResponse {
+	return &APIResponse{
 		Message: msg,
 		status:  status,
 		Error:   err,
@@ -21,65 +21,65 @@ func newAPIResponse(msg string, status int, err *apiError, data any) *apiJSONRes
 	}
 }
 
-func ok(msg string, data any) *apiJSONResponse {
-	return &apiJSONResponse{
+func Ok(msg string, data any) *APIResponse {
+	return &APIResponse{
 		Message: msg,
 		status:  http.StatusOK,
 		Data:    data,
 	}
 }
 
-func created(msg string, data any) *apiJSONResponse {
-	return &apiJSONResponse{
+func Created(msg string, data any) *APIResponse {
+	return &APIResponse{
 		Message: msg,
 		status:  http.StatusCreated,
 		Data:    data,
 	}
 }
 
-func (resp *apiJSONResponse) Write(w http.ResponseWriter) {
+func (resp *APIResponse) Write(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.status)
 	json.NewEncoder(w).Encode(resp)
 }
 
-type apiError struct {
+type APIError struct {
 	Message string `json:"message,omitempty"`
 	Status  int    `json:"status"`
 	stack   string
 }
 
-func newAPIError(message string, status int, err error) *apiError {
-	return &apiError{
+func newAPIError(message string, status int, err error) *APIError {
+	return &APIError{
 		Message: message,
 		Status:  status,
 		stack:   err.Error(),
 	}
 }
 
-func badRequest(msg string) *apiError {
-	return &apiError{
+func BadRequest(msg string) *APIError {
+	return &APIError{
 		Message: msg,
 		Status:  http.StatusBadRequest,
 	}
 }
 
-func notFound(msg string) *apiError {
-	return &apiError{
+func NotFound(msg string) *APIError {
+	return &APIError{
 		Message: msg,
 		Status:  http.StatusNotFound,
 	}
 }
 
-func internalError(msg string, err error) *apiError {
-	return &apiError{
+func InternalError(msg string, err error) *APIError {
+	return &APIError{
 		Message: msg,
 		Status:  http.StatusInternalServerError,
 		stack:   err.Error(),
 	}
 }
 
-func (aErr *apiError) Write(w http.ResponseWriter) {
+func (aErr *APIError) Write(w http.ResponseWriter) {
 	resp := newAPIResponse(aErr.Message, aErr.Status, aErr, nil)
 	resp.Write(w)
 }

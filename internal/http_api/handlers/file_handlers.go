@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/lckrugel/file-server/internal/files"
+	"github.com/lckrugel/file-server/internal/http_api"
 )
 
 type fileResponse struct {
@@ -51,27 +52,27 @@ func NewFileHandler(fs *files.FileService) *FileHandler {
 func (fh *FileHandler) Upload(w http.ResponseWriter, req *http.Request) {
 	filename := req.Header.Get("X-Filename")
 	if filename == "" {
-		apiErr := badRequest("missing filename")
+		apiErr := http_api.BadRequest("missing filename")
 		apiErr.Write(w)
 		return
 	}
 
 	contentType := req.Header.Get("Content-Type")
 	if contentType == "" {
-		apiErr := badRequest("unkown file type")
+		apiErr := http_api.BadRequest("unkown file type")
 		apiErr.Write(w)
 		return
 	}
 
 	contentLength := req.Header.Get("Content-Length")
 	if contentLength == "" {
-		apiErr := badRequest("unkown file size")
+		apiErr := http_api.BadRequest("unkown file size")
 		apiErr.Write(w)
 		return
 	}
 	fileSize, err := strconv.ParseInt(contentLength, 10, 64)
 	if err != nil {
-		apiErr := badRequest("invalid file size")
+		apiErr := http_api.BadRequest("invalid file size")
 		apiErr.Write(w)
 		return
 	}
@@ -82,42 +83,42 @@ func (fh *FileHandler) Upload(w http.ResponseWriter, req *http.Request) {
 		ContentLength: fileSize,
 	}, req.Body)
 	if err != nil {
-		var apiErr *apiError
+		var apiErr *http_api.APIError
 		switch {
 		case errors.Is(err, files.ErrInvalidFilename):
-			apiErr = badRequest("invalid filename")
+			apiErr = http_api.BadRequest("invalid filename")
 		case errors.Is(err, files.ErrFileTooLarge):
-			apiErr = badRequest("file too large")
+			apiErr = http_api.BadRequest("file too large")
 		default:
 			log.Printf("unexpected error while storing file: %v", err)
-			apiErr = internalError("failed to store file", err)
+			apiErr = http_api.InternalError("failed to store file", err)
 		}
 		apiErr.Write(w)
 		return
 	}
 
-	resp := created("file uploaded successfully", toFileResponse(file))
+	resp := http_api.Created("file uploaded successfully", toFileResponse(file))
 	resp.Write(w)
 }
 
 func (fh *FileHandler) Download(w http.ResponseWriter, req *http.Request) {
 	fileId := req.PathValue("fileId")
 	if fileId == "" {
-		apiErr := badRequest("invalid file id")
+		apiErr := http_api.BadRequest("invalid file id")
 		apiErr.Write(w)
 		return
 	}
 
 	fileMeta, err := fh.fileService.Get(req.Context(), fileId)
 	if err != nil {
-		var apiErr *apiError
+		var apiErr *http_api.APIError
 		switch {
 		case errors.Is(err, files.ErrFileNotFound):
-			apiErr = notFound("file not found")
+			apiErr = http_api.NotFound("file not found")
 
 		default:
 			log.Printf("failed to get file metadata: %v", err)
-			apiErr = internalError("failed to get file", err)
+			apiErr = http_api.InternalError("failed to get file", err)
 		}
 		apiErr.Write(w)
 		return
@@ -125,17 +126,17 @@ func (fh *FileHandler) Download(w http.ResponseWriter, req *http.Request) {
 
 	fileReader, err := fh.fileService.Stream(req.Context(), fileMeta.ID)
 	if err != nil {
-		var apiErr *apiError
+		var apiErr *http_api.APIError
 		switch {
 		case errors.Is(err, files.ErrFileNotFound):
-			apiErr = notFound("file not found")
+			apiErr = http_api.NotFound("file not found")
 
 		case errors.Is(err, files.ErrFileNotReady):
-			apiErr = notFound("file not found")
+			apiErr = http_api.NotFound("file not found")
 
 		default:
 			log.Printf("failed to stream file: %v", err)
-			apiErr = internalError("failed to get file", err)
+			apiErr = http_api.InternalError("failed to get file", err)
 		}
 		apiErr.Write(w)
 		return
@@ -153,11 +154,11 @@ func (fh *FileHandler) List(w http.ResponseWriter, req *http.Request) {
 	files, err := fh.fileService.List(req.Context())
 	if err != nil {
 		log.Printf("error while listing files: %v", err)
-		apiErr := internalError("file uploaded successfully", err)
+		apiErr := http_api.InternalError("file uploaded successfully", err)
 		apiErr.Write(w)
 		return
 	}
 
-	resp := ok("", toFileResponses(files))
+	resp := http_api.Ok("", toFileResponses(files))
 	resp.Write(w)
 }

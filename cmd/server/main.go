@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/lckrugel/file-server/internal/auth"
 	"github.com/lckrugel/file-server/internal/files"
-	"github.com/lckrugel/file-server/internal/handlers"
+	"github.com/lckrugel/file-server/internal/http_api/handlers"
 	"github.com/lckrugel/file-server/internal/users"
 )
 
