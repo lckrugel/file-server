@@ -4,30 +4,30 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/lckrugel/file-server/internal/auth"
 	"github.com/lckrugel/file-server/internal/files"
-	"github.com/lckrugel/file-server/internal/http_api/handlers"
+	"github.com/lckrugel/file-server/internal/server"
 	"github.com/lckrugel/file-server/internal/users"
 )
 
 func main() {
-	router := chi.NewRouter()
-
 	fileRepo := files.NewMemoryRepository()
 	fileStorage := files.NewLocalStorage("./storage")
 	fileService := files.NewFileService(fileRepo, fileStorage)
-	fileHandler := handlers.NewFileHandler(fileService)
 
 	userRepo := users.NewMemoryRepository()
 	userService := users.NewUserService(userRepo)
 
 	credentialRepo := auth.NewMemoryRepository()
-	_ = auth.NewAuthService(credentialRepo, userService)
+	authService := auth.NewAuthService(credentialRepo, userService)
 
-	router.Post("/files", fileHandler.Upload)
-	router.Get("/files/{fileId}", fileHandler.Download)
-	router.Get("/files", fileHandler.List)
+	server := server.NewAPIServer(
+		authService,
+		userService,
+		fileService,
+	)
+
+	router := server.Router()
 
 	log.Println("Starting server on localhost:8080")
 	if err := http.ListenAndServe(":8080", router); err != nil {
