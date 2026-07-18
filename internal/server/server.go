@@ -28,12 +28,14 @@ func NewAPIServer(
 func (s *APIServer) Router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Group(func(r chi.Router) {
-		r.Post("/files", s.Upload)
-		r.Get("/files/{fileId}", s.Download)
-		r.Get("/files", s.List)
+	r.Post("/register", s.register)
 
-		r.Use(s.AuthMiddleware)
+	r.Group(func(r chi.Router) {
+		r.Post("/files", s.upload)
+		r.Get("/files/{fileId}", s.download)
+		r.Get("/files", s.list)
+
+		r.Use(s.authMiddleware)
 	})
 
 	return r
