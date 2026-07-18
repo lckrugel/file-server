@@ -38,7 +38,7 @@ func toFileResponses(fs []*files.File) []fileResponse {
 	return response
 }
 
-func (s *APIServer) Upload(w http.ResponseWriter, req *http.Request) {
+func (s *APIServer) upload(w http.ResponseWriter, req *http.Request) {
 	filename := req.Header.Get("X-Filename")
 	if filename == "" {
 		apiErr := badRequest("missing filename")
@@ -90,7 +90,7 @@ func (s *APIServer) Upload(w http.ResponseWriter, req *http.Request) {
 	resp.write(w)
 }
 
-func (s *APIServer) Download(w http.ResponseWriter, req *http.Request) {
+func (s *APIServer) download(w http.ResponseWriter, req *http.Request) {
 	fileId := req.PathValue("fileId")
 	if fileId == "" {
 		apiErr := badRequest("invalid file id")
@@ -139,7 +139,7 @@ func (s *APIServer) Download(w http.ResponseWriter, req *http.Request) {
 	io.Copy(w, fileReader)
 }
 
-func (s *APIServer) List(w http.ResponseWriter, req *http.Request) {
+func (s *APIServer) list(w http.ResponseWriter, req *http.Request) {
 	files, err := s.fileService.List(req.Context())
 	if err != nil {
 		log.Printf("error while listing files: %v", err)
